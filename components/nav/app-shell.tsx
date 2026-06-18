@@ -141,10 +141,6 @@ export function AppShell({
 
         {/* Main content */}
         <main className="min-w-0 flex-1 bg-background">
-          {/* Full-width content with symmetric gutters — no max-w cap, so the
-              page fills the column with equal left/right spacing that lines up
-              under the header. Pages needing a narrow column (forms, prose)
-              apply their own max-w on an inner wrapper. */}
           <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
             {children}
           </div>
