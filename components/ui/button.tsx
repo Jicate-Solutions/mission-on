@@ -26,7 +26,9 @@ const variantClasses: Record<ButtonVariant, string> = {
 
 const sizeClasses: Record<ButtonSize, string> = {
   sm: 'h-9 px-3 text-sm',
-  md: 'h-11 px-4 text-base',
+  // Buttons read as UI, not body copy — text-sm at md keeps labels crisp while
+  // the h-11 target stays touch-friendly. lg keeps text-base for prominent CTAs.
+  md: 'h-11 px-4 text-sm',
   lg: 'h-12 px-6 text-base',
   icon: 'h-11 w-11 p-0',
 }

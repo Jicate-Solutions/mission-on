@@ -108,7 +108,7 @@ export function AppShell({
 
       {/* Content column: content-scoped header + main */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-surface/70 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-surface/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-surface/70 sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
@@ -141,7 +141,11 @@ export function AppShell({
 
         {/* Main content */}
         <main className="min-w-0 flex-1 bg-background">
-          <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+          {/* Full-width content with symmetric gutters — no max-w cap, so the
+              page fills the column with equal left/right spacing that lines up
+              under the header. Pages needing a narrow column (forms, prose)
+              apply their own max-w on an inner wrapper. */}
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
             {children}
           </div>
         </main>

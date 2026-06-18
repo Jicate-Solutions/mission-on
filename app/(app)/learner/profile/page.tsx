@@ -27,7 +27,7 @@ export default async function LearnerProfilePage() {
   const profile = await getLearnerProfile()
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex w-full max-w-2xl flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-ink">My profile</h1>
         <p className="mt-1 text-ink-muted">
