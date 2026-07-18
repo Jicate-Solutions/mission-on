@@ -69,6 +69,7 @@ export type NavIconKey =
   | 'bug'
   | 'heart'
   | 'swap'
+  | 'key'
 
 // Shared cross-role links. Same href for everyone; the page gates access.
 const ANONYMOUS_CHAT: NavItem = {
@@ -146,6 +147,11 @@ export const NAV_CONFIG: Record<Role, NavSection[]> = {
           label: 'Role management',
           href: '/super-admin/roles',
           icon: 'shield',
+        },
+        {
+          label: 'Access codes',
+          href: '/super-admin/access-codes',
+          icon: 'key',
         },
         { label: 'Audit log', href: '/super-admin/audit', icon: 'clipboard' },
         {

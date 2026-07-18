@@ -20,8 +20,8 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
+import { postLoginDestination } from '@/lib/auth/shared'
 import type { Role } from '@/types/database'
-import { roleHome } from '@/components/nav/nav-config'
 
 export interface SignInState {
   /** User-safe error message, or null when no error. */
@@ -38,41 +38,19 @@ function field(formData: FormData, name: string): string {
 // exists or which half of the credential pair was wrong.
 const INVALID_CREDENTIALS = 'Incorrect email or password. Please try again.'
 
-/**
- * Resolve the destination after a successful sign-in. Reads the verified user's
- * role from user_roles (RLS-scoped to their own row) and maps it to the role
- * home. If no role row exists yet (account created but not allocated), we send
- * them to a holding page rather than guessing a role.
- */
-async function postLoginDestination(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  fallback: string
-): Promise<string> {
-  const { data: roleRow } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  const role = (roleRow?.role as Role | undefined) ?? null
-  if (!role) {
-    // Authenticated but not yet allocated a role by an admin.
-    return '/pending'
-  }
-
-  // Only honour an internal relative "next" target; ignore anything else to
-  // avoid open-redirects.
-  if (fallback.startsWith('/') && !fallback.startsWith('//')) {
-    return fallback
-  }
-  return roleHome(role)
-}
+// Every role except super_admin authenticates with an access code instead
+// (doc/update.md §2-3). This is the enforcement that actually retires
+// email/password for them — it catches any lingering or future non-super-admin
+// credential, independent of which UI a caller reaches this action from.
+const NOT_SUPER_ADMIN =
+  'This sign-in is for Super Admins only. Use your access code at /login instead.'
 
 /**
- * Sign in with email + password. On success, sets the session cookie and
- * redirects to the role home (or a safe internal `next`). On failure, returns a
- * generic error for the client form to display.
+ * Sign in with email + password. Reserved for the Super Admin credential login
+ * (doc/update.md §2) — every other role authenticates via access code
+ * (signInWithCode in lib/auth/code-actions.ts). On success, sets the session
+ * cookie and redirects to the role home (or a safe internal `next`). On
+ * failure, returns a generic error for the client form to display.
  *
  * Signature matches useActionState: (prevState, formData).
  */
@@ -99,6 +77,20 @@ export async function signIn(
     return { error: INVALID_CREDENTIALS }
   }
 
+  const { data: roleRow } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', data.user.id)
+    .maybeSingle()
+  const role = (roleRow?.role as Role | undefined) ?? null
+
+  if (role !== null && role !== 'super_admin') {
+    // A non-super-admin credential should not exist post-migration, but if one
+    // lingers (or is created by mistake) it must not grant a session here.
+    await supabase.auth.signOut()
+    return { error: NOT_SUPER_ADMIN }
+  }
+
   const destination = await postLoginDestination(
     supabase,
     data.user.id,
@@ -107,13 +99,6 @@ export async function signIn(
 
   // redirect() throws — must be outside any try/catch.
   redirect(destination)
-}
-
-export interface SignUpState {
-  /** User-safe error message, or null when no error. */
-  error: string | null
-  /** True when the account was created but an email confirmation is required. */
-  needsConfirmation?: boolean
 }
 
 const PASSWORD_MIN = 8
@@ -129,70 +114,6 @@ async function requestOrigin(): Promise<string> {
   const host = h.get('x-forwarded-host') ?? h.get('host')
   const proto = h.get('x-forwarded-proto') ?? 'http'
   return host ? `${proto}://${host}` : ''
-}
-
-/**
- * Self-service registration. Creates a Supabase Auth account ONLY — it does NOT
- * grant a role. Per the RBAC model, role allocation is an Admin/Super Admin
- * action (user_roles is admin-write-only under RLS), so a fresh account cannot
- * elevate itself: on first sign-in it lands on /pending until an admin allocates
- * a role. This keeps self-signup safe while still letting people create accounts.
- *
- * Behaviour depends on the project's "Confirm email" setting:
- *   - confirmation OFF -> a session is returned; we redirect to /pending.
- *   - confirmation ON  -> no session; we return needsConfirmation so the form
- *     shows a "check your email" state. The link routes via /auth/callback.
- *
- * Signature matches useActionState: (prevState, formData).
- */
-export async function signUp(
-  _prevState: SignUpState,
-  formData: FormData
-): Promise<SignUpState> {
-  const fullName = field(formData, 'fullName')
-  const email = field(formData, 'email')
-  const password = field(formData, 'password')
-  const confirm = field(formData, 'confirmPassword')
-
-  if (!fullName || !email || !password) {
-    return { error: 'Enter your name, email, and a password.' }
-  }
-  if (password.length < PASSWORD_MIN) {
-    return { error: `Choose a password of at least ${PASSWORD_MIN} characters.` }
-  }
-  if (password !== confirm) {
-    return { error: 'The two passwords do not match.' }
-  }
-
-  const origin = await requestOrigin()
-  const supabase = await createClient()
-
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { full_name: fullName },
-      emailRedirectTo: origin
-        ? `${origin}/auth/callback?next=/pending`
-        : undefined,
-    },
-  })
-
-  if (error) {
-    // Non-enumerating: never reveal whether the email already exists.
-    return {
-      error:
-        'We could not create that account. Try a different email, or sign in if you already have one.',
-    }
-  }
-
-  // Confirmation disabled -> authenticated immediately -> holding page.
-  if (data.session) {
-    redirect('/pending')
-  }
-
-  // Confirmation required -> ask the user to check their inbox.
-  return { error: null, needsConfirmation: true }
 }
 
 export interface ResetRequestState {

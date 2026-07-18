@@ -76,10 +76,14 @@ export function RoleRoster({
           return (
             <TableRow key={u.userId}>
               <TableCell className="font-medium text-ink">
-                {u.email ?? (
-                  <span className="text-ink-muted">
-                    {u.userId.slice(0, 8)}… (no email)
-                  </span>
+                {u.isCodeProvisioned ? (
+                  u.displayName
+                ) : (
+                  u.email ?? (
+                    <span className="text-ink-muted">
+                      {u.userId.slice(0, 8)}… (no email)
+                    </span>
+                  )
                 )}
               </TableCell>
               <TableCell>

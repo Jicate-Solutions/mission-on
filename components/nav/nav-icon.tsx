@@ -68,6 +68,12 @@ const PATHS: Record<NavIconKey, React.ReactNode> = {
       <path d="M4 8h13l-3-3M20 16H7l3 3" />
     </>
   ),
+  key: (
+    <>
+      <circle cx="8" cy="15" r="4" />
+      <path d="m11 12 8-8M16 7l2 2M19 4l2 2" />
+    </>
+  ),
 }
 
 export interface NavIconProps {

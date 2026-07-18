@@ -35,6 +35,11 @@ export type AuditAction =
   | 'learner.provision'
   // Designating / clearing the JKKN safeguarding counsellor (sub_role).
   | 'counsellor.designate'
+  // Access-code lifecycle (doc/update.md §3-4). Never logs the plaintext code
+  // or its hash — only the affected user/role.
+  | 'access_code.generate'
+  | 'access_code.revoke'
+  | 'access_code.regenerate'
   // Program-config changes (e.g. safeguarding contacts, SLA thresholds).
   | 'config.update'
   // Safeguarding lifecycle.

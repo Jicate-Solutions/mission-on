@@ -5,23 +5,22 @@ import { redirect } from 'next/navigation'
 import { verifySession } from '@/lib/dal'
 import { roleHome } from '@/components/nav/nav-config'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AccessCodeForm } from './access-code-form'
+import { AdminLoginForm } from './admin-login-form'
 
 export const metadata: Metadata = {
-  title: 'Sign in — Mission ON',
+  title: 'Super Admin sign in — Mission ON',
 }
 
 /**
- * Access-code login (doc/update.md §3) — every role except super_admin signs
- * in here. Server component:
- *   - If already authenticated with a role, redirect straight to the role home
- *     (defence in depth alongside the proxy's optimistic check).
- *   - Otherwise render the client access-code form, threading a sanitised
- *     ?next.
+ * Super Admin credential login (doc/update.md §2). Every other role signs in
+ * with an access code at /login instead — signIn() itself rejects any
+ * resolved role other than super_admin, so this route grants nothing beyond
+ * what the DAL already enforces; it exists to give Super Admins a real
+ * email+password form rather than an access-code field.
  *
  * searchParams is async in Next.js 16.
  */
-export default async function LoginPage({
+export default async function AdminLoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>
@@ -39,17 +38,25 @@ export default async function LoginPage({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Welcome back</CardTitle>
+        <CardTitle>Super Admin sign in</CardTitle>
       </CardHeader>
       <CardContent>
-        <AccessCodeForm next={safeNext} />
+        <AdminLoginForm next={safeNext} />
         <p className="mt-4 text-center text-sm text-ink-muted">
-          Super Admin?{' '}
           <Link
-            href="/admin-login"
+            href="/forgot-password"
             className="font-medium text-primary hover:underline"
           >
-            Sign in here
+            Forgot your password?
+          </Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-ink-muted">
+          Not a Super Admin?{' '}
+          <Link
+            href="/login"
+            className="font-medium text-primary hover:underline"
+          >
+            Sign in with an access code
           </Link>
         </p>
       </CardContent>

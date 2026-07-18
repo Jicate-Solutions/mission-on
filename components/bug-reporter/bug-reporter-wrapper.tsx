@@ -10,7 +10,7 @@
 // (NEXT_PUBLIC_BUG_REPORTER_API_URL) — reports do NOT touch this app's DB.
 //
 // Mounted in the AUTHENTICATED group layout (app/(app)/layout.tsx) only, so the
-// widget never appears on /login, /signup, /auth/* (Pattern C — auth-only).
+// widget never appears on /login, /admin-login, /auth/* (Pattern C — auth-only).
 //
 // INERT UNTIL CONFIGURED: when the API key/URL are absent it renders children
 // untouched (no widget, no network) — safe to ship before the credentials land

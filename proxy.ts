@@ -9,7 +9,8 @@ import { updateSession } from '@/lib/supabase/middleware-session'
  *   - refreshes the Supabase session cookie (updateSession),
  *   - reads whether a session exists (cookie-level, not a DB role check),
  *   - redirects unauthenticated users away from protected groups to /login,
- *   - redirects authenticated users away from auth pages (/login, /signup).
+ *   - redirects authenticated users away from auth pages (/login,
+ *     /admin-login).
  *
  * This is NOT authorization. It runs on every matched route including
  * prefetches, so it must never fetch application data or check roles. Real
@@ -17,7 +18,7 @@ import { updateSession } from '@/lib/supabase/middleware-session'
  */
 
 // Public routes that an unauthenticated visitor may reach.
-const PUBLIC_PREFIXES = ['/login', '/signup', '/auth', '/forgot-password']
+const PUBLIC_PREFIXES = ['/login', '/admin-login', '/auth', '/forgot-password']
 
 // Landing page is public; everything else under the app is protected.
 const PUBLIC_EXACT = ['/']
@@ -33,8 +34,8 @@ function isAuthPage(pathname: string): boolean {
   return (
     pathname === '/login' ||
     pathname.startsWith('/login/') ||
-    pathname === '/signup' ||
-    pathname.startsWith('/signup/')
+    pathname === '/admin-login' ||
+    pathname.startsWith('/admin-login/')
   )
 }
 

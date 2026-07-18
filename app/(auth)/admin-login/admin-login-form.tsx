@@ -9,18 +9,17 @@ import { Label } from '@/components/ui/label'
 
 const initialState: SignInState = { error: null }
 
-export interface LoginFormProps {
+export interface AdminLoginFormProps {
   /** Safe internal path to return to after login (from ?next=). */
   next?: string
 }
 
 /**
- * Client login form. Submits to the signIn Server Action via useActionState so
- * we get a pending state and a returned error message without holding any
- * Supabase session in the browser. On success the action redirects, so this
- * component never sees the authenticated state.
+ * Super Admin credential form (doc/update.md §2). Submits to the signIn Server
+ * Action, which rejects any resolved role other than super_admin. On success
+ * the action redirects, so this component never sees the authenticated state.
  */
-export function LoginForm({ next }: LoginFormProps) {
+export function AdminLoginForm({ next }: AdminLoginFormProps) {
   const [state, formAction, pending] = useActionState(signIn, initialState)
 
   return (
@@ -71,11 +70,6 @@ export function LoginForm({ next }: LoginFormProps) {
       <Button type="submit" size="lg" disabled={pending} className="mt-2 w-full">
         {pending ? 'Signing in…' : 'Sign in'}
       </Button>
-
-      <p className="text-center text-sm text-ink-muted">
-        Accounts are created by your program team. If you cannot sign in, ask
-        your coordinator or mentor for help.
-      </p>
     </form>
   )
 }
